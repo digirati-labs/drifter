@@ -13,7 +13,6 @@ import signal
 import os
 import boto3
 import uuid
-import zipfile
 import subprocess
 import settings
 
@@ -175,10 +174,6 @@ def fetch_current_repo_head():
         logger.debug(f"zip stderr output was: {zip_output}")
 
     return full_repo_path
-
-
-def exec_shell(command):
-    subprocess.run(command)
 
 
 def terraform_initialise(terraform_bin, repo_folder):
