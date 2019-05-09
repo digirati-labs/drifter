@@ -28,7 +28,7 @@ DB_TYPE='sqlite'
 
 | Name    | Description                                   | Default    |
 |---------|-----------------------------------------------|------------|
-| DB_NAME | This is the full path of the .db file to use. | cupcake.db |
+| DB_NAME | This is the full path of the .db file to use. | drifter.db |
 
 ## PostgreSQL
 
