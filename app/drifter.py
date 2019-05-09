@@ -198,7 +198,7 @@ def terraform_initialise(terraform_bin, repo_folder):
         stdout=subprocess.PIPE
     ).stdout.read()
 
-    logger.debug(f"terraform init output was: {init_output}")
+    # logger.debug(f"terraform init output was: {init_output}")
 
 
 def terraform_plan(terraform_bin, repo_folder):
@@ -215,8 +215,11 @@ def terraform_plan(terraform_bin, repo_folder):
         f"{terraform_bin} plan --detailed-exitcode -input=false -lock=false -no-color",
         cwd=candidate_folder,
         shell=True,
-        stdout=subprocess.PIPE
+        stdout=subprocess.PIPE,
+        universal_newlines=True
     )
+
+    child.wait()
 
     exit_code = child.returncode
 
@@ -232,7 +235,7 @@ def terraform_plan(terraform_bin, repo_folder):
         return False
     else:
         # plan finished
-        logger.debug(f"terraform plan output was: {plan_output}")
+        # logger.debug(f"terraform plan output was: {plan_output}")
 
         logger.info(f"plan finished")
 
@@ -242,27 +245,30 @@ def terraform_plan(terraform_bin, repo_folder):
         pending_destroy = 0
         pending_total = 0
 
-        resource_regex = re.compile(r" Refreshing state\.\.\.")
-        plan_regex = re.compile(r"^Plan (\d+) to add, (\d+) to change, (\d+) to destroy.")
+        resource_regex = re.compile(r".*Refreshing state\.\.\.")
+        plan_regex = re.compile(r".*Plan: (\d+) to add, (\d+) to change, (\d+) to destroy\.")
 
-        for plan_line in plan_output:
+        for plan_line in plan_output.split("\n"):
             # count number of resources
             if resource_regex.match(plan_line):
                 resource_count = resource_count + 1
 
             m = plan_regex.match(plan_line)
             if m:
-                pending_add = int(m.group(0))
-                pending_change = int(m.group(1))
-                pending_destroy = int(m.group(2))
+                pending_add = int(m.group(1))
+                pending_change = int(m.group(2))
+                pending_destroy = int(m.group(3))
 
-        logger.debug(f"pending add: {pending_add}")
-        logger.debug(f"pending change: {pending_change}")
-        logger.debug(f"pending destroy: {pending_destroy}")
+        # logger.debug(f"pending add: {pending_add}")
+        # logger.debug(f"pending change: {pending_change}")
+        # logger.debug(f"pending destroy: {pending_destroy}")
 
         pending_total = pending_add + pending_change + pending_destroy
 
-        logger.debug(f"pending total: {pending_total}")
+        # logger.debug(f"pending total: {pending_total}")
+
+        # logger.debug(f"plan time taken: {plan_time_taken}")
+        # logger.debug(f"terraform_status: {exit_code}")
 
     return {
         "terraform_status": exit_code,
@@ -270,6 +276,7 @@ def terraform_plan(terraform_bin, repo_folder):
         "pending_add": pending_add,
         "pending_change": pending_change,
         "pending_destroy": pending_destroy,
+        "pending_total": pending_total,
         "plan_time": plan_time_taken
     }
 
@@ -309,15 +316,16 @@ def pretty_print_metrics(metrics):
     human_readable = lambda delta: ["%d %s" % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1])
         for attr in attrs if getattr(delta, attr)]
 
-    pending_message = f"Pending: Add={metrics.pending_add}, Change={metrics.pending_change}, Destroy={metrics.pending_destroy}, Total={metrics.pending_total}"
+    pending_message = f'Pending: Add={metrics["pending_add"]}, Change={metrics["pending_change"]}, Destroy={metrics["pending_destroy"]}, Total={metrics["pending_total"]}'
 
     changes_message = "No changes detected."
-    if metrics.exit_code == 2:
+
+    if metrics["terraform_status"] == 2:
         changes_message = f"Drift detected! {pending_message}"
 
-    resources_message = f"Resource count: {metrics.resource_count}"
+    resources_message = f'Resource count: {metrics["resource_count"]}'
 
-    delta = relativedelta(seconds=metrics.plan_time)
+    delta = relativedelta(seconds=metrics["plan_time"])
 
     time_taken_human_readable = ", ".join(human_readable(delta))
     timing_message = f"Plan took {time_taken_human_readable}."
