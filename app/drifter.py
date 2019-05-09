@@ -47,9 +47,16 @@ def main():
     terraform_initialise(terraform_bin, repo_folder)
 
     # terraform plan (with parameters)
-    result = terraform_plan(terraform_bin, repo_folder)
+    metrics = terraform_plan(terraform_bin, repo_folder)
 
     # ship metrics
+    ship_metrics_to_console(metrics)
+
+    if settings.CLOUDWATCH_NAMESPACE:
+        ship_metrics_to_cloudwatch(metrics)
+
+    if settings.SLACK_WEBHOOK_URL and deduplicate_alert(metrics):
+        alert_slack(metrics)
 
 
 def signal_handler(signum, frame):
@@ -240,10 +247,10 @@ def terraform_plan(terraform_bin, repo_folder):
 
         for plan_line in plan_output:
             # count number of resources
-            if re.match(resource_regex, plan_line):
+            if resource_regex.match(plan_line):
                 resource_count = resource_count + 1
 
-            m = re.match(plan_regex, plan_line)
+            m = plan_regex.match(plan_line)
             if m:
                 pending_add = int(m.group(0))
                 pending_change = int(m.group(1))
@@ -265,6 +272,57 @@ def terraform_plan(terraform_bin, repo_folder):
         "pending_destroy": pending_destroy,
         "plan_time": plan_time_taken
     }
+
+
+def ship_metrics_to_console(metrics):
+    logger.info(f"ship_metrics_to_console")
+
+    message = pretty_print_metrics(metrics)
+    logger.info(message)
+
+
+def ship_metrics_to_cloudwatch(metrics):
+    logger.info(f"shipping metrics to cloudwatch")
+    cloudwatch = boto3.client("cloudwatch", settings.AWS_REGION)
+
+
+def deduplicate_alert(metrics):
+    logger.info(f"deduplicating alert")
+    return True
+
+
+def alert_slack(metrics):
+    logger.info(f"alerting to Slack")
+
+    message = ""
+    _ = requests.post(settings.SLACK_WEBHOOK_URL, json={"text": message, "link_names": 1})
+
+
+def get_relative_time(start_time, end_time):
+    return relativedelta(microsecond=int(round((end_time-start_time) * 1000000)))
+
+
+def pretty_print_metrics(metrics):
+    logger.info(f"pretty_print_metrics")
+
+    attrs = ["years", "months", "days", "hours", "minutes", "seconds", "microsecond"]
+    human_readable = lambda delta: ["%d %s" % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1])
+        for attr in attrs if getattr(delta, attr)]
+
+    pending_message = f"Pending: Add={metrics.pending_add}, Change={metrics.pending_change}, Destroy={metrics.pending_destroy}, Total={metrics.pending_total}"
+
+    changes_message = "No changes detected."
+    if metrics.exit_code == 2:
+        changes_message = f"Drift detected! {pending_message}"
+
+    resources_message = f"Resource count: {metrics.resource_count}"
+
+    delta = relativedelta(seconds=metrics.plan_time)
+
+    time_taken_human_readable = ", ".join(human_readable(delta))
+    timing_message = f"Plan took {time_taken_human_readable}."
+
+    return f"{changes_message}\n{resources_message}\n{timing_message}"
 
 
 if __name__ == "__main__":

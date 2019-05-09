@@ -16,6 +16,7 @@ This is loosely based upon https://github.com/futurice/terraform-monitor-lambda
 | TERRAFORM_GITHUB_TOKEN  | GitHub access token for the repo defined in `TERRAFORM_GITHUB_REPO`                     |         |
 | TERRAFORM_GITHUB_FOLDER | Subfolder within GitHub repository for Terraform                                        |         |
 | CLOUDWATCH_NAMESPACE    | AWS CloudWatch metric namespace where metrics should be shipped                         |         |
+| AWS_REGION              | AWS Region name                                                                         |         |
 | SLACK_WEBHOOK_URL       | Slack Webhook URL to emit messages to                                                   |         |
 | TMP_FOLDER              | Temporary folder to use                                                                 | /tmp    |
 
