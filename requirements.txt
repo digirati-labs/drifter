@@ -1,0 +1,4 @@
+logzero
+requests
+python-dateutil
+boto3
