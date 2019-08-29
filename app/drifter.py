@@ -351,7 +351,7 @@ def deduplicate_alert(metrics):
 def alert_slack(metrics):
     logger.info(f"alerting to Slack")
 
-    message = ""
+    message = pretty_print_metrics(metrics)
     _ = requests.post(settings.SLACK_WEBHOOK_URL, json={"text": message, "link_names": 1})
 
 
