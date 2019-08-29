@@ -198,7 +198,7 @@ def terraform_initialise(terraform_bin, repo_folder):
         stdout=subprocess.PIPE
     ).stdout.read()
 
-    # logger.debug(f"terraform init output was: {init_output}")
+    logger.debug(f"terraform init output was: {init_output}")
 
 
 def terraform_plan(terraform_bin, repo_folder):
@@ -291,6 +291,56 @@ def ship_metrics_to_console(metrics):
 def ship_metrics_to_cloudwatch(metrics):
     logger.info(f"shipping metrics to cloudwatch")
     cloudwatch = boto3.client("cloudwatch", settings.AWS_REGION)
+
+    cloudwatch.put_metric_data(
+        MetricData=[
+            {
+                "MetricName": "Pending-Add",
+                "Dimensions": [
+                    {
+                        "Name": "GitHubRepo",
+                        "Value": settings.TERRAFORM_GITHUB_REPO
+                    }
+                ],
+                "Unit": "Count",
+                "Value": metrics["pending_add"]
+            },
+            {
+                "MetricName": "Pending-Change",
+                "Dimensions": [
+                    {
+                        "Name": "GitHubRepo",
+                        "Value": settings.TERRAFORM_GITHUB_REPO
+                    }
+                ],
+                "Unit": "Count",
+                "Value": metrics["pending_change"]
+            },
+            {
+                "MetricName": "Pending-Destroy",
+                "Dimensions": [
+                    {
+                        "Name": "GitHubRepo",
+                        "Value": settings.TERRAFORM_GITHUB_REPO
+                    }
+                ],
+                "Unit": "Count",
+                "Value": metrics["pending_destroy"]
+            },
+            {
+                "MetricName": "Pending-Total",
+                "Dimensions": [
+                    {
+                        "Name": "GitHubRepo",
+                        "Value": settings.TERRAFORM_GITHUB_REPO
+                    }
+                ],
+                "Unit": "Count",
+                "Value": metrics["pending_total"]
+            }
+        ],
+        Namespace=settings.CLOUDWATCH_NAMESPACE
+    )
 
 
 def deduplicate_alert(metrics):
