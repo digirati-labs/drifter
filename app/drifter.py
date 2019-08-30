@@ -366,7 +366,7 @@ def pretty_print_metrics(metrics):
     human_readable = lambda delta: ["%d %s" % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1])
         for attr in attrs if getattr(delta, attr)]
 
-    pending_message = f'Pending: Add={metrics["pending_add"]}, Change={metrics["pending_change"]}, Destroy={metrics["pending_destroy"]}, Total={metrics["pending_total"]}'
+    pending_message = f'Repository: {settings.TERRAFORM_GITHUB_REPO}, Branch: {settings.TERRAFORM_GITHUB_BRANCH}, Folder: {settings.TERRAFORM_GITHUB_FOLDER}\nPending: Add={metrics["pending_add"]}, Change={metrics["pending_change"]}, Destroy={metrics["pending_destroy"]}, Total={metrics["pending_total"]}'
 
     changes_message = "No changes detected."
 
