@@ -202,8 +202,8 @@ def terraform_initialise(terraform_bin, repo_folder):
         stderr=subprocess.PIPE
     )
 
-    init_output = str(child.stdout.read(), "utf-8")
-    init_error = str(child.stderr.read(), "utf-8")
+    init_output = get_utf8(child.stdout.read())
+    init_error = get_utf8(child.stderr.read())
 
     if len(init_error) > 0:
         logger.info(f"terraform init failed. output was: {init_output}")
@@ -241,8 +241,8 @@ def terraform_plan(terraform_bin, repo_folder):
 
     plan_time_taken = time.time() - plan_start_time
 
-    plan_output = str(child.stdout.read(), "utf-8")
-    plan_error = str(child.stderr.read(), "utf-8")
+    plan_output = get_utf8(child.stdout.read())
+    plan_error = get_utf8(child.stderr.read())
 
     if exit_code == 1:
         # plan failed
@@ -296,6 +296,15 @@ def terraform_plan(terraform_bin, repo_folder):
         "pending_total": pending_total,
         "plan_time": plan_time_taken
     }
+
+
+def get_utf8(input):
+    try:
+        input = input.decode("utf-8")
+    except (UnicodeDecodeError, AttributeError):
+        pass
+
+    return input
 
 
 def ship_metrics_to_console(metrics):
