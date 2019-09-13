@@ -13,8 +13,8 @@ This is loosely based upon https://github.com/futurice/terraform-monitor-lambda
 | TERRAFORM_S3_KEY        | The key of the Terraform remote state in S3 (see `TERRAFORM_S3_BUCKET`, above)          |         |
 | TERRAFORM_GITHUB_REPO   | GitHub repository in format `user/repo`                                                 |         |
 | TERRAFORM_GITHUB_BRANCH | GitHub repository branch to use                                                         | master  |
-| TERRAFORM_GITHUB_TOKEN  | GitHub access token for the repo defined in `TERRAFORM_GITHUB_REPO`                     |         |
 | TERRAFORM_GITHUB_FOLDER | Subfolder within GitHub repository for Terraform                                        |         |
+| TERRAFORM_GITHUB_TOKEN  | GitHub access token for the repo defined in `TERRAFORM_GITHUB_REPO`                     |         |
 | CLOUDWATCH_NAMESPACE    | AWS CloudWatch metric namespace where metrics should be shipped                         |         |
 | AWS_REGION              | AWS Region name                                                                         |         |
 | SLACK_WEBHOOK_URL       | Slack Webhook URL to emit messages to                                                   |         |
