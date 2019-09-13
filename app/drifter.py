@@ -202,10 +202,13 @@ def terraform_initialise(terraform_bin, repo_folder):
         stderr=subprocess.PIPE
     )
 
-    init_output = child.stdout.read()
-    init_error = child.stderr.read()
+    init_output = child.stdout.read().decode("utf-8")
+    init_error = child.stderr.read().decode("utf-8")
 
     if len(init_error) > 0:
+        logger.info(f"terraform init failed. output was: {init_output}")
+        logger.info(f"error was: {init_error}")
+
         alert_slack(f"problem during initialise: {init_error}")
         return False
 
@@ -238,8 +241,8 @@ def terraform_plan(terraform_bin, repo_folder):
 
     plan_time_taken = time.time() - plan_start_time
 
-    plan_output = child.stdout.read()
-    plan_error = child.stderr.read()
+    plan_output = child.stdout.read().decode("utf-8")
+    plan_error = child.stderr.read().decode("utf-8")
 
     if exit_code == 1:
         # plan failed
