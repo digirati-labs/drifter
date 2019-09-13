@@ -44,10 +44,13 @@ def main():
     repo_folder = fetch_current_repo_head()
 
     # terraform init (with parameters)
-    terraform_initialise(terraform_bin, repo_folder)
+    if not terraform_initialise(terraform_bin, repo_folder):
+        return
 
     # terraform plan (with parameters)
     metrics = terraform_plan(terraform_bin, repo_folder)
+    if metrics is None:
+        return
 
     # ship metrics
     ship_metrics_to_console(metrics)
@@ -56,7 +59,7 @@ def main():
         ship_metrics_to_cloudwatch(metrics)
 
     if settings.SLACK_WEBHOOK_URL and deduplicate_alert(metrics):
-        alert_slack(metrics)
+        alert_slack(pretty_print_metrics(metrics))
 
 
 def signal_handler(signum, frame):
@@ -191,14 +194,23 @@ def terraform_initialise(terraform_bin, repo_folder):
         candidate_folder = f"{candidate_folder}/{settings.TERRAFORM_GITHUB_FOLDER}"
         logger.info(f"using candidate repo folder {candidate_folder}")
 
-    init_output = subprocess.Popen(
+    child = subprocess.Popen(
         f"{terraform_bin} init -input=false -lock=false -no-color",
         cwd=candidate_folder,
         shell=True,
-        stdout=subprocess.PIPE
-    ).stdout.read()
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    init_output = child.stdout.read()
+    init_error = child.stderr.read()
+
+    if len(init_error) > 0:
+        alert_slack(f"problem during initialise: {init_error}")
+        return False
 
     logger.debug(f"terraform init output was: {init_output}")
+    return True
 
 
 def terraform_plan(terraform_bin, repo_folder):
@@ -216,6 +228,7 @@ def terraform_plan(terraform_bin, repo_folder):
         cwd=candidate_folder,
         shell=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         universal_newlines=True
     )
 
@@ -226,16 +239,16 @@ def terraform_plan(terraform_bin, repo_folder):
     plan_time_taken = time.time() - plan_start_time
 
     plan_output = child.stdout.read()
+    plan_error = child.stderr.read()
 
     if exit_code == 1:
         # plan failed
-        plan_error = child.stderr.read()
         logger.info(f"terraform plan failed. output was: {plan_output}")
         logger.info(f"error was: {plan_error}")
-        return False
+        return None
     else:
         # plan finished
-        # logger.debug(f"terraform plan output was: {plan_output}")
+        logger.debug(f"terraform plan output was: {plan_output}")
 
         logger.info(f"plan finished")
 
@@ -259,9 +272,10 @@ def terraform_plan(terraform_bin, repo_folder):
                 pending_change = int(m.group(2))
                 pending_destroy = int(m.group(3))
 
-        # logger.debug(f"pending add: {pending_add}")
-        # logger.debug(f"pending change: {pending_change}")
-        # logger.debug(f"pending destroy: {pending_destroy}")
+                logger.debug(f"line: {plan_line}")
+                logger.debug(f"pending add: {pending_add}")
+                logger.debug(f"pending change: {pending_change}")
+                logger.debug(f"pending destroy: {pending_destroy}")
 
         pending_total = pending_add + pending_change + pending_destroy
 
@@ -348,10 +362,9 @@ def deduplicate_alert(metrics):
     return True
 
 
-def alert_slack(metrics):
+def alert_slack(message):
     logger.info(f"alerting to Slack")
 
-    message = pretty_print_metrics(metrics)
     _ = requests.post(settings.SLACK_WEBHOOK_URL, json={"text": message, "link_names": 1})
 
 
