@@ -1,6 +1,6 @@
 # Drifter
 
-A tool that can detect and report on configuration drift between the latest repo version of infrastructure Terraform and the deployed result.
+A tool that can detect and report on configuration drift between the latest repo version of AWS infrastructure Terraform and the deployed result.
 
 This is loosely based upon https://github.com/futurice/terraform-monitor-lambda
 
