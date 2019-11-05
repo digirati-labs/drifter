@@ -20,6 +20,7 @@ This is loosely based upon https://github.com/futurice/terraform-monitor-lambda
 | SLACK_WEBHOOK_URL       | Slack Webhook URL to emit messages to                                                   |         |
 | TMP_FOLDER              | Temporary folder to use                                                                 | /tmp    |
 
+The beady-eyed amongst you may note that there are additional settings for configuring a database - this is reserved for expansion and is currently unused.
 
 ## Permissions - AWS
 
