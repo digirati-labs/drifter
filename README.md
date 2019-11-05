@@ -20,30 +20,14 @@ This is loosely based upon https://github.com/futurice/terraform-monitor-lambda
 | SLACK_WEBHOOK_URL       | Slack Webhook URL to emit messages to                                                   |         |
 | TMP_FOLDER              | Temporary folder to use                                                                 | /tmp    |
 
-## sqlite
 
-To use sqlite as the backing database, set the following:
-```
-DB_TYPE='sqlite'
-```
+## Permissions - AWS
 
-| Name    | Description                                   | Default    |
-|---------|-----------------------------------------------|------------|
-| DB_NAME | This is the full path of the .db file to use. | drifter.db |
+From an AWS point of view these are handled by the Terraform. We don't know the scope of the Terraform that we will be asked to check, but we do know that we don't want to be able to change anything, so in the Terraform packaged with this module the Drifter task is given `arn:aws:iam::aws:policy/ReadOnlyAccess` which is a pre-rolled AWS policy that gives read-only access to all resource types.
 
-## PostgreSQL
+## Permissions - GitHub
 
-To use PostgreSQL as the backing database, set the following:
-```
-DB_TYPE='postgresql'
-```
-
-| Name        | Description                                              | Default |
-|-------------|----------------------------------------------------------|---------|
-| DB_NAME     | This is the database name                                |         |
-| DB_HOST     | This is the database host and port in `host:port` format |         |
-| DB_USER     | This is the username to connect to database with         |         |
-| DB_PASSWORD | This is the password to connect to database with         |         |
+For GitHub, the access token given to Drifter must have READ access to the Terraform source repository. In Digirati's case, we'd simply add the `CI` team with READ access to the repository Teams list.
 
 ## Terraform
 
