@@ -3,7 +3,7 @@ locals {
 }
 
 module "drifter_task" {
-  source = "git::https://github.com/digirati-co-uk/terraform-aws-modules.git//tf/modules/services/tasks/base/?ref=v1.0"
+  source = "git::https://github.com/digirati-co-uk/terraform-aws-modules.git//tf/modules/services/tasks/base/?ref=v2.0"
 
   environment_variables = {
     "DEBUG"                   = "True"
@@ -37,7 +37,7 @@ module "drifter_task" {
 }
 
 module "drifter" {
-  source = "git::https://github.com/digirati-co-uk/terraform-aws-modules.git//tf/modules/services/tasks/scheduled/?ref=v1.0"
+  source = "git::https://github.com/digirati-co-uk/terraform-aws-modules.git//tf/modules/services/tasks/scheduled/?ref=v2.0"
 
   family              = "${var.prefix}-${local.identifier}"
   task_role_name      = "${module.drifter_task.role_name}"
