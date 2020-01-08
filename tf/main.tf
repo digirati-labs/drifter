@@ -87,8 +87,8 @@ data "aws_iam_policy_document" "drifter_abilities" {
 
 resource "aws_iam_role_policy" "drifter_abilities" {
   name   = "${var.prefix}-drifter-${local.identifier}-abilities"
-  role   = "${module.drifter_task.role_name}"
-  policy = "${data.aws_iam_policy_document.drifter_abilities.json}"
+  role   = module.drifter_task.role_name
+  policy = data.aws_iam_policy_document.drifter_abilities.json
 }
 
 data "aws_iam_policy" "readonly" {
@@ -96,6 +96,6 @@ data "aws_iam_policy" "readonly" {
 }
 
 resource "aws_iam_role_policy_attachment" "drifter_readonly" {
-  role       = "${module.drifter_task.role_name}"
-  policy_arn = "${data.aws_iam_policy.readonly.arn}"
+  role       = module.drifter_task.role_name
+  policy_arn = data.aws_iam_policy.readonly.arn
 }
