@@ -235,14 +235,14 @@ def terraform_plan(terraform_bin, repo_folder):
         universal_newlines=True
     )
 
-    child.wait()
+    stdout, stderr = child.communicate()
 
-    exit_code = child.returncode
+    exit_code = child.poll()
 
     plan_time_taken = time.time() - plan_start_time
 
-    plan_output = get_utf8(child.stdout.read())
-    plan_error = get_utf8(child.stderr.read())
+    plan_output = get_utf8(stdout)
+    plan_error = get_utf8(stderr)
 
     if exit_code == 1:
         # plan failed
