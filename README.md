@@ -57,7 +57,7 @@ Terraform module for scheduled checking using Drifter, with notifications sent t
 
 ```
 module "drifter_estate" {
-  source                 = "git::https://github.com/digirati-labs/terraform-drifter.git//"
+  source                 = "git::https://github.com/digirati-labs/drifter.git/tree/master/tf/"
   slack_webhook_url      = "${var.slack_webhook_status}"
   terraform_identifier   = "my-terraform-repo-master"
   terraform_s3_bucket    = "my-state-bucket"
